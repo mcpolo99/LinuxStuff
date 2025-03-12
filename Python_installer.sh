@@ -37,6 +37,27 @@ fetch_python_versions() {
     done
 }
 
+# Function to check if the selected version is already installed
+check_installed_version() {
+    installed_version=$(python3 --version 2>&1 | grep -oP '\d+\.\d+(\.\d+)*')
+
+    if [[ -n "$installed_version" ]]; then
+        echo "Currently installed Python version: $installed_version"
+        # Compare the middle parts of the version numbers
+        installed_middle=$(echo $installed_version | cut -d. -f1,2)
+        selected_middle=$(echo $selected_version | cut -d. -f1,2)
+
+        if [[ "$installed_middle" == "$selected_middle" && "$installed_version" != "$selected_version" ]]; then
+            echo "Warning: A version with the same middle version (e.g., $installed_middle) is already installed."
+            read -p "Do you want to uninstall the existing version before installing $selected_version? (y/n): " choice
+            if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
+                sudo apt-get remove -y python$installed_version
+                echo "$installed_version uninstalled."
+            fi
+        fi
+    fi
+}
+
 # Function to download and install Python from FTP
 install_python_from_ftp() {
     echo "Downloading and installing Python $selected_version..."
@@ -52,8 +73,12 @@ install_python_from_ftp() {
     ./configure --enable-optimizations
     make -j$(nproc)
 
-    # Install Python
-    sudo make altinstall
+    # If the version is different (e.g., 3.12.x and 3.13.x), we use altinstall
+    if [[ "$installed_middle" != "$selected_middle" ]]; then
+        sudo make altinstall
+    else
+        sudo make install
+    fi
 
     # Clean up
     cd ..
@@ -70,6 +95,9 @@ main() {
 
     # Fetch available versions and allow the user to select one
     fetch_python_versions
+
+    # Check if the selected version is already installed
+    check_installed_version
 
     # Ask the user if they want to proceed with the installation
     read -p "Do you want to install Python $selected_version? (y/n): " choice
