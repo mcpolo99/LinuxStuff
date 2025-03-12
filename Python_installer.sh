@@ -28,8 +28,8 @@ fetch_python_versions() {
     echo "Available Python versions:"
     select version in $versions; do
         if [[ -n "$version" ]]; then
-            echo "You selected version: $version"
-            selected_version=$version
+            selected_version=$(echo "$version" | sed 's/\/$//')
+            echo "You selected version: $selected_version"
             break
         else
             echo "Invalid selection. Please choose a valid version."
