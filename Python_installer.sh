@@ -60,7 +60,7 @@ install_python_from_ftp() {
     rm -rf "Python-$selected_version" "Python-$selected_version.tgz"
 
     # Verify installation
-    python3.$(echo $selected_version | cut -d. -f1,2) --version
+    python$(echo $selected_version | cut -d. -f1,2) --version
 }
 
 # Main function to orchestrate the installation
